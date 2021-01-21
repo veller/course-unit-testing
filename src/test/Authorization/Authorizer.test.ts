@@ -80,7 +80,29 @@ describe('Authorizer test suite', () => {
     test('validateToken returns expired for expired tokens', async () => {
         const dateInPast = new Date(Date.now() - 1);
         mockSessionTokenDBAccess.getToken.mockReturnValueOnce({ valid: true, expirationTime: dateInPast })
+
+        const sessionToken = await authorizer.validateToken('123')
+
+        expect(sessionToken).toStrictEqual({
+            accessRights: [],
+            state: TokenState.EXPIRED
+        })
     })
 
+    test('validateToken returns valid for not expired and valid tokens', async () => {
+        const dateInFuture = new Date(Date.now() + 1000000)
+        mockSessionTokenDBAccess.getToken.mockReturnValueOnce({
+            valid: true,
+            expirationTime: dateInFuture,
+            accessRights: [1]
+        })
+
+        const sessionToken = await authorizer.validateToken('123')
+
+        expect(sessionToken).toStrictEqual({
+            accessRights: [1],
+            state: TokenState.VALID
+        })
+    })
 
 })
